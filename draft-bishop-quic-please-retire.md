@@ -53,7 +53,7 @@ The issuer is expected to replace retired CIDs promptly, since if the consumer
 runs out of valid CIDs, the connection will close.  However, the issuer is not
 obligated to do so as a safeguard against consumers who retire too aggressively.
 
-However, this leaves the only perpetual obligation in the hands of the issuer:
+This leaves the only perpetual obligation in the hands of the issuer:
 
 > When an endpoint issues a connection ID, it MUST accept packets that carry
 > this connection ID for the duration of the connection or until its peer
