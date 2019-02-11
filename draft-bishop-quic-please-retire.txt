@@ -1,0 +1,336 @@
+
+
+
+
+QUIC                                                           M. Bishop
+Internet-Draft                                       Akamai Technologies
+Intended status: Standards Track                       February 11, 2019
+Expires: August 15, 2019
+
+
+             PLEASE_RETIRE_CONNECTION_ID Extension for QUIC
+                 draft-bishop-quic-please-retire-latest
+
+Abstract
+
+   QUIC version 1 divides control over the lifecycle of Connection IDs
+   between the issuer (the recipient of packets) and the consumer (the
+   sender of packets).  Once a CID has been issued, only the consumer is
+   able to retire them from use.  This document describes an extension
+   whereby the issuer can signal that a particular CID needs to be
+   retired.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on August 15, 2019.
+
+Copyright Notice
+
+   Copyright (c) 2019 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+
+
+
+
+Bishop                   Expires August 15, 2019                [Page 1]
+
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+
+
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Extension Definition  . . . . . . . . . . . . . . . . . . . .   3
+     2.1.  please_retire_cid_supported Transport Parameter . . . . .   3
+     2.2.  PLEASE_RETIRE_CONNECTION_ID Frame . . . . . . . . . . . .   3
+       2.2.1.  Frame Processing  . . . . . . . . . . . . . . . . . .   4
+   3.  Security Considerations . . . . . . . . . . . . . . . . . . .   4
+   4.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   5
+     4.1.  Transport Parameter Registration  . . . . . . . . . . . .   5
+     4.2.  Frame Type Registration . . . . . . . . . . . . . . . . .   5
+   5.  References  . . . . . . . . . . . . . . . . . . . . . . . . .   5
+     5.1.  Normative References  . . . . . . . . . . . . . . . . . .   5
+     5.2.  Informative References  . . . . . . . . . . . . . . . . .   5
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   6
+
+1.  Introduction
+
+   In QUIC version 1 [QUIC], Connection IDs are issued by each endpoint.
+   These connection IDs are used in the Destination Connection ID field
+   of future QUIC packets directed toward the issuer of the CID.  An
+   issuer is permitted to issue as many CIDs as they wish, with guidance
+   from the consumer around the desired number of simultaneous CIDs in
+   the form of the "max_connection_ids" transport parameter (see PR#1998
+   in the QUIC repo).
+
+   The structure of a Connection ID and any semantics tied to it are
+   private arrangements between the issuer and its local routing
+   infrastructure, if any.  QUIC does not attempt to dictate how the
+   Connection ID is formed or interpreted, though [QUIC-LB] offers some
+   options for servers and load balancers to consider.
+
+   The consumer then uses the CIDs and retires them once they will no
+   longer be used.  The issuer is expected to replace retired CIDs
+   promptly, since if the consumer runs out of valid CIDs, the
+   connection will close.  However, the issuer is not obligated to do so
+   as a safeguard against consumers who retire too aggressively.
+
+   This leaves the only perpetual obligation in the hands of the issuer:
+
+      When an endpoint issues a connection ID, it MUST accept packets
+      that carry this connection ID for the duration of the connection
+      or until its peer invalidates the connection ID via a
+      RETIRE_CONNECTION_ID frame.
+
+
+
+
+Bishop                   Expires August 15, 2019                [Page 2]
+
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+
+
+   Under certain designs, it might become necessary for an issuer to
+   discontinue use of a set of Connection IDs.  For example, suppose the
+   Connection IDs are encrypted and have an embedded key identifier.  If
+   the key referenced by this identifier is about to be replaced, the
+   issuer will need to close any connections on which Connection IDs
+   bound to the old key are still active.
+
+   In other scenarios, an endpoint might wish to provoke a change of
+   Connection ID from its peer in order to reduce linkability.  While
+   implementations are required to change Connection IDs when the local
+   or remote address of the connection changes, there is no way to force
+   a rotation without performing migration and triggering associated
+   activities (Section 9.3 of [QUIC]).
+
+   This document defines a simple extension to QUIC by which an issuer
+   can prompt the retirement of a previously-issued Connection ID.
+
+2.  Extension Definition
+
+2.1.  please_retire_cid_supported Transport Parameter
+
+   This document defines one new tranport parameter:
+
+   please_retire_cid_supported (0xTBD1):  This extension is supported
+      and the frame type 0xTBD2 can be understood.  This transport
+      parameter MUST have a length of zero.
+
+   If the transport parameter is present, this extension is supported.
+   If the peer does not supply this transport parameter, the
+   PLEASE_RETIRE_CONNECTION_ID frame MUST NOT be sent during the
+   connection.
+
+2.2.  PLEASE_RETIRE_CONNECTION_ID Frame
+
+   An endpoint sends a PLEASE_RETIRE_CONNECTION_ID frame (type=0xTBD2)
+   to indicate that it no longer wishes its peer to use a connection ID
+   that it previously issued.  This may include the connection ID
+   provided during the handshake.
+
+   The PLEASE_RETIRE_CONNECTION_ID frame is as follows:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                      Sequence Number (i)                    ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+   PLEASE_RETIRE_CONNECTION_ID frames contain the following fields:
+
+
+
+Bishop                   Expires August 15, 2019                [Page 3]
+
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+
+
+   Sequence Number:  The sequence number of the connection ID to be
+      retired.  See Section 5.1.2 of [QUIC].
+
+   An endpoint cannot send this frame if it provided its peer with a
+   zero-length connection ID.  An endpoint that is using a zero-length
+   connection ID MUST treat receipt of a PLEASE_RETIRE_CONNECTION_ID
+   frame as a connection error of type PROTOCOL_VIOLATION.
+
+   The PLEASE_RETIRE_CONNECTION_ID frames are retransmitted if the
+   packet containing them is declared lost.  The frames MAY also be
+   retransmitted if the packet containing them arrives successfully, but
+   the Connection ID in question is not retired after a reasonable
+   length of time.
+
+2.2.1.  Frame Processing
+
+   Upon receipt of a PLEASE_RETIRE_CONNECTION_ID frame, an endpoint
+   SHOULD immediately cease using the indicated Connection ID and send a
+   RETIRE_CONNECTION_ID frame containing the same Sequence Number.  If
+   the indicated connection ID is the only currently active connection
+   ID, the recipient MAY defer this action until an alternate connection
+   ID has been received.
+
+   Receipt of a PLEASE_RETIRE_CONNECTION_ID frame containing an unknown
+   sequence number MUST NOT be treated as an error.  If the sequence
+   number is less than the greatest sequence number previously received
+   from the peer, the recipient SHOULD immediately send a
+   RETIRE_CONNECTION_ID frame for the indicated sequence number.  The
+   NEW_CONNECTION_ID frame can be ignored on receipt.
+
+   If the indicated sequence number is greater than any previously
+   received from the peer, the recipient SHOULD remember that it has
+   been asked to retire the Connection ID in question and retire it
+   immediately upon receipt, but MAY discard the frame.
+
+   This specification does not modify the requirement that
+   implementations not send a RETIRE_CONNECTION_ID frame containing a
+   sequence number greater than any previously received.
+
+3.  Security Considerations
+
+   This extension helps to mitigate some attacks on Connection ID
+   issuers by recipients who fail to retire old connection IDs.  While
+   the issuer is in full control of the number of connection IDs issued,
+   the consumer can force the maintenance of state from the beginning of
+   a long-lived connection by using only newer connection IDs.
+
+
+
+
+
+Bishop                   Expires August 15, 2019                [Page 4]
+
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+
+
+   However, if a consumer assiduously tracks future connection IDs it
+   has been asked to retire upon receipt, this is also a potential
+   security threat.  The rules for retransmission and processing are
+   intended to ensure that consumers can safely drop frames which
+   reference unknown sequence numbers and still reach a consistent state
+   with a well-behaved peer.
+
+4.  IANA Considerations
+
+4.1.  Transport Parameter Registration
+
+   This document registers one entry in the "QUIC Transport Parameters"
+   registry established by [QUIC].
+
+   Value:  0xTBD1
+
+   Parameter Name:  please_retire_cid_supported
+
+   Specification:  This document
+
+4.2.  Frame Type Registration
+
+   This document registers one entry in the "QUIC Frame Type" registry
+   established by [QUIC].
+
+   Value:  0xTBD2
+
+   Frame Name:  PLEASE_RETIRE_CONNECTION_ID
+
+   Specification:  This document
+
+5.  References
+
+5.1.  Normative References
+
+   [QUIC]     Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
+              and Secure Transport", draft-ietf-quic-transport-18 (work
+              in progress), January 2019.
+
+5.2.  Informative References
+
+   [QUIC-LB]  Duke, M., "QUIC-LB: Generating Routable QUIC Connection
+              IDs", draft-duke-quic-load-balancers-03 (work in
+              progress), December 2018.
+
+
+
+
+
+
+
+Bishop                   Expires August 15, 2019                [Page 5]
+
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+
+
+Author's Address
+
+   Mike Bishop
+   Akamai Technologies
+
+   Email: mbishop@evequefou.be
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Bishop                   Expires August 15, 2019                [Page 6]
