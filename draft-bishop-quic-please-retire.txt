@@ -4,8 +4,8 @@
 
 QUIC                                                           M. Bishop
 Internet-Draft                                       Akamai Technologies
-Intended status: Standards Track                       February 11, 2019
-Expires: August 15, 2019
+Intended status: Standards Track                          April 23, 2019
+Expires: October 25, 2019
 
 
              PLEASE_RETIRE_CONNECTION_ID Extension for QUIC
@@ -35,7 +35,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on August 15, 2019.
+   This Internet-Draft will expire on October 25, 2019.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Bishop                   Expires August 15, 2019                [Page 1]
+Bishop                  Expires October 25, 2019                [Page 1]
 
-Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID            April 2019
 
 
    the Trust Legal Provisions and are provided without warranty as
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Bishop                   Expires August 15, 2019                [Page 2]
+Bishop                  Expires October 25, 2019                [Page 2]
 
-Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID            April 2019
 
 
    Under certain designs, it might become necessary for an issuer to
@@ -165,9 +165,9 @@ Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
 
 
 
-Bishop                   Expires August 15, 2019                [Page 3]
+Bishop                  Expires October 25, 2019                [Page 3]
 
-Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID            April 2019
 
 
    Sequence Number:  The sequence number of the connection ID to be
@@ -179,10 +179,10 @@ Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
    frame as a connection error of type PROTOCOL_VIOLATION.
 
    The PLEASE_RETIRE_CONNECTION_ID frames are retransmitted if the
-   packet containing them is declared lost.  The frames MAY also be
-   retransmitted if the packet containing them arrives successfully, but
-   the Connection ID in question is not retired after a reasonable
-   length of time.
+   packet containing them is declared lost, provided that the connection
+   ID has not yet been retired.  The frames MAY also be retransmitted if
+   the packet containing them arrives successfully, but the Connection
+   ID in question is not retired after a reasonable length of time.
 
 2.2.1.  Frame Processing
 
@@ -190,8 +190,8 @@ Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
    SHOULD immediately cease using the indicated Connection ID and send a
    RETIRE_CONNECTION_ID frame containing the same Sequence Number.  If
    the indicated connection ID is the only currently active connection
-   ID, the recipient MAY defer this action until an alternate connection
-   ID has been received.
+   ID, the recipient will have to defer this action until an alternate
+   connection ID has been received.
 
    Receipt of a PLEASE_RETIRE_CONNECTION_ID frame containing an unknown
    sequence number MUST NOT be treated as an error.  If the sequence
@@ -221,9 +221,9 @@ Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
 
 
 
-Bishop                   Expires August 15, 2019                [Page 4]
+Bishop                  Expires October 25, 2019                [Page 4]
 
-Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID            April 2019
 
 
    However, if a consumer assiduously tracks future connection IDs it
@@ -262,8 +262,8 @@ Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
 5.1.  Normative References
 
    [QUIC]     Iyengar, J. and M. Thomson, "QUIC: A UDP-Based Multiplexed
-              and Secure Transport", draft-ietf-quic-transport-18 (work
-              in progress), January 2019.
+              and Secure Transport", draft-ietf-quic-transport-19 (work
+              in progress), March 2019.
 
 5.2.  Informative References
 
@@ -277,9 +277,9 @@ Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
 
 
 
-Bishop                   Expires August 15, 2019                [Page 5]
+Bishop                  Expires October 25, 2019                [Page 5]
 
-Internet-Draft         PLEASE_RETIRE_CONNECTION_ID         February 2019
+Internet-Draft         PLEASE_RETIRE_CONNECTION_ID            April 2019
 
 
 Author's Address
@@ -333,4 +333,4 @@ Author's Address
 
 
 
-Bishop                   Expires August 15, 2019                [Page 6]
+Bishop                  Expires October 25, 2019                [Page 6]
