@@ -116,9 +116,10 @@ receipt of a PLEASE_RETIRE_CONNECTION_ID frame as a connection error of type
 PROTOCOL_VIOLATION.
 
 The PLEASE_RETIRE_CONNECTION_ID frames are retransmitted if the packet
-containing them is declared lost.  The frames MAY also be retransmitted
-if the packet containing them arrives successfully, but the Connection ID
-in question is not retired after a reasonable length of time.
+containing them is declared lost, provided that the connection ID has not yet
+been retired.  The frames MAY also be retransmitted if the packet containing
+them arrives successfully, but the Connection ID in question is not retired
+after a reasonable length of time.
 
 ### Frame Processing
 
@@ -126,8 +127,8 @@ Upon receipt of a PLEASE_RETIRE_CONNECTION_ID frame, an endpoint SHOULD
 immediately cease using the indicated Connection ID and send a
 RETIRE_CONNECTION_ID frame containing the same Sequence Number.  If the
 indicated connection ID is the only currently active connection ID, the
-recipient MAY defer this action until an alternate connection ID has been
-received.
+recipient will have to defer this action until an alternate connection ID has
+been received.
 
 Receipt of a PLEASE_RETIRE_CONNECTION_ID frame containing an unknown sequence
 number MUST NOT be treated as an error. If the sequence number is less than the
